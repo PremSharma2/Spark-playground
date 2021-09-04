@@ -1,4 +1,4 @@
-# The official repository for the Rock the JVM Spark Essentials with Scala course
+# The official repository for the  Spark Essentials with Scala 
 
 This repository contains the code For spark basics and essentials
 
