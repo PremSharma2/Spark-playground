@@ -10,6 +10,7 @@ object DataSources extends App {
     .config("spark.master", "local")
     .getOrCreate()
 
+  //TODO : Cars Schema
   val carsSchema = StructType(Array(
     StructField("Name", StringType),
     StructField("Miles_per_Gallon", DoubleType),
@@ -23,11 +24,13 @@ object DataSources extends App {
   ))
 
   /*
+ TODO
     Reading a DF:
     - format
     - schema or inferSchema = true
     - path
     - zero or more options
+    .option("mode", "failFast") spark will throw an exception if any record of df is corrupt or malformed
    */
   val carsDF = spark.read
     .format("json")
@@ -47,13 +50,15 @@ object DataSources extends App {
     .load()
 
   /*
+ TODO
    Writing DFs
    - format
    - save mode = overwrite, append, ignore, errorIfExists
    - path
    - zero or more options
   */
-  carsDF.write
+  carsDF
+    .write
     .format("json")
     .mode(SaveMode.Overwrite)
     .save("src/main/resources/data/cars_dupe.json")
@@ -113,7 +118,7 @@ object DataSources extends App {
 
   val moviesDF = spark.read.json("src/main/resources/data/movies.json")
 
-  // TSV
+  // TODO :TSV format
   moviesDF.write
     .format("csv")
     .option("header", "true")

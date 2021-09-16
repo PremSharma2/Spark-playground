@@ -99,7 +99,7 @@ object DataFramesBasics extends App {
   val smartphonesDF = smartphones.toDF("Make", "Model", "Platform", "CameraMegapixels")
   smartphonesDF.show()
 
-  // 2
+  // 2 : TODO : Reading theJson file here
   val moviesDF = spark.read
     .format("json")
     .option("inferSchema", "true")
