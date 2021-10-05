@@ -1,6 +1,6 @@
 package part2dataframes
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.functions.{col, column, expr}
 
 object ColumnsAndExpressions extends App {
@@ -15,7 +15,7 @@ object ColumnsAndExpressions extends App {
     .json("src/main/resources/data/cars.json")
 
   // Columns
-  val firstColumn = carsDF.col("Name")
+  val firstColumn: Column = carsDF.col("Name")
 
   // selecting (projecting)
   val carNamesDF = carsDF.select(firstColumn)
@@ -35,8 +35,8 @@ object ColumnsAndExpressions extends App {
   carsDF.select("Name", "Year")
 
   // EXPRESSIONS
-  val simplestExpression = carsDF.col("Weight_in_lbs")
-  val weightInKgExpression = carsDF.col("Weight_in_lbs") / 2.2
+  val simplestExpression: Column = carsDF.col("Weight_in_lbs")
+  val weightInKgExpression: Column = carsDF.col("Weight_in_lbs") / 2.2
 
   val carsWithWeightsDF = carsDF.select(
     col("Name"),

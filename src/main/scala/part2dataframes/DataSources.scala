@@ -51,7 +51,7 @@ object DataSources extends App {
 
   /*
  TODO
-   Writing DFs: 
+   Writing DFs:
    - format
    - save mode = overwrite, append, ignore, errorIfExists
    - path
@@ -60,7 +60,7 @@ object DataSources extends App {
   carsDF
     .write
     .format("json")
-    .mode(SaveMode.Overwrite)
+    .mode(SaveMode.Overwrite) // overwrite the earlier snapshot with this new one
     .save("src/main/resources/data/cars_dupe.json")
 
   // JSON flags
@@ -119,14 +119,14 @@ object DataSources extends App {
   val moviesDF = spark.read.json("src/main/resources/data/movies.json")
 
   // TODO :TSV format
-  moviesDF.write
-    .format("csv")
-    .option("header", "true")
-    .option("sep", "\t")
-    .save("src/main/resources/data/movies.csv")
+  //moviesDF.write
+  //  .format("csv")
+  //  .option("header", "true")
+   // .option("sep", "\t")
+  //  .save("src/main/resources/data/movies.csv")
 
   // Parquet
-  moviesDF.write.save("src/main/resources/data/movies.parquet")
+ // moviesDF.write.save("src/main/resources/data/movies.parquet")
 
   // save to DF
   moviesDF.write

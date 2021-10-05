@@ -55,7 +55,7 @@ object Aggregations extends App {
   val avgRatingByGenreDF = moviesDF
     .groupBy(col("Major_Genre"))
     .avg("IMDB_Rating")
-
+//TODO It is good when we want to use two aggregate function
   val aggregationsByGenreDF = moviesDF
     .groupBy(col("Major_Genre"))
     .agg(
@@ -78,7 +78,7 @@ object Aggregations extends App {
   // 1
   moviesDF
     .select((col("US_Gross") + col("Worldwide_Gross") + col("US_DVD_Sales")).as("Total_Gross"))
-    .select(sum("Total_Gross"))
+    .select(sum("Total_Gross").as("Total-Gross"))
     .show()
 
   // 2
