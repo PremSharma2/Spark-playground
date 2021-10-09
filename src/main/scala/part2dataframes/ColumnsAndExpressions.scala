@@ -125,6 +125,8 @@ object ColumnsAndExpressions extends App {
     .withColumn("Total_Gross", col("US_Gross") + col("Worldwide_Gross"))
 
   // 3
+  //TODO this is an expression here we have chained the filter
+  // Expression = col("Major_Genre") === "Comedy" and col("IMDB_Rating") > 6
   val atLeastMediocreComediesDF = moviesDF.select("Title", "IMDB_Rating")
     .where(col("Major_Genre") === "Comedy" and col("IMDB_Rating") > 6)
 
