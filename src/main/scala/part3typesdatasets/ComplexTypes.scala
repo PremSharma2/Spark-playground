@@ -52,12 +52,12 @@ val filterExpression: Column = col("Actual_Release").isNull
     .select(col("Title"), struct(col("US_Gross"), col("Worldwide_Gross")).as("Profit"))
     .select(col("Title"), col("Profit").getField("US_Gross").as("US_Profit"))
 
-  // 2 - with expression strings
+  //TODO 2 - with expression strings
   moviesDF
     .selectExpr("Title", "(US_Gross, Worldwide_Gross) as Profit")
     .selectExpr("Title", "Profit.US_Gross")
 
-  // Arrays
+  //TODO:-> Arrays
 
   val moviesWithWords = moviesDF.select(col("Title"), split(col("Title"), " |,").as("Title_Words")) // ARRAY of strings
 
