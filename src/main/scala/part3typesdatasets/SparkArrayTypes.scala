@@ -1,11 +1,13 @@
 package part3typesdatasets
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.types.{ArrayType, MapType, StringType, StructType}
+import org.apache.spark.sql.{Column, DataFrame, Row, SparkSession}
 object SparkArrayTypes extends App {
 
   val spark = SparkSession.builder()
     .appName("Complex Data Types")
     .config("spark.master", "local")
+    .config("spark.sql.mapKeyDedupPolicy","LAST_WIN")
     .getOrCreate()
   val records = Seq(
     ("x", 4, 1),
@@ -437,15 +439,15 @@ TODO
 
   arr_slice_df.show()
 
-
+//TODO  -------------Explode in Detail--------------------------------------
  /*
 TODO
  explode
  This function creates a new row for each element of an array or map.
  Let’s first create new column with fewer values to explode.
  +----+---------+
-|col1|slice_col|
-+----+---------+
+ |col1|slice_col|
+ +----+---------+
 |   x|   [1, 2]|
 |   z|   [3, 2]|
 |   a|   [4, 5]|
@@ -476,5 +478,186 @@ Upon explode, 2 rows are generated for each element of an array in column slice_
   val arr_explode_df = temp_df1.withColumn("result", explode(col("slice_col")))
 
   arr_explode_df.show()
+
+
+  val arrayData = Seq(
+    Row("James",List("Java","Scala","C++"),Map("hair"->"black","eye"->"brown")),
+    Row("Michael",List("Spark","Java","C++",null),Map("hair"->"brown","eye"->null)),
+    Row("Robert",List("CSharp","Python",""),Map("hair"->"red","eye"->"")),
+    Row("Washington",null,null),
+    Row("Jeferson",List(),Map())
+  )
+
+  val arraySchema = new StructType()
+    .add("name",StringType)
+    .add("knownLanguages", ArrayType(StringType))
+    .add("properties", MapType(StringType,StringType))
+
+  val df11 = spark.createDataFrame(spark.sparkContext.parallelize(arrayData),arraySchema)
+  df11.printSchema()
+  df11.show()
+
+  import spark.implicits._
+  // Below are Array examples
+  //explode
+  df11.select($"name",explode($"knownLanguages"))
+    .show()
+/*
+TODO
+ +-------+------+
+|name   |col   |
++-------+------+
+|James  |Java  |
+|James  |Scala |
+|Michael|Spark |
+|Michael|Java  |
+|Michael|null  |
+|Robert |CSharp|
+|Robert |      |
++-------+------+
+ */
+  //explode_outer
+  df11.select($"name",explode_outer($"knownLanguages"))
+    .show()
+/*
++----------+------+
+|name      |col   |
++----------+------+
+|James     |Java  |
+|James     |Scala |
+|Michael   |Spark |
+|Michael   |Java  |
+|Michael   |null  |
+|Robert    |CSharp|
+|Robert    |      |
+|Washington|null  |
+|Jeferson  |null  |
++----------+------+
+ */
+  //posexplode
+  df11.select($"name",posexplode($"knownLanguages"))
+    .show()
+
+  //posexplode_outer
+  df11.select($"name",posexplode_outer($"knownLanguages"))
+    .show()
+/*
+ */
+  // Below are Map examples
+
+  //explode
+  df11.select($"name",explode($"properties"))
+    .show()
+  /*
+TODO
+   +-------+----+-----+
+|name   |key |value|
++-------+----+-----+
+|James  |hair|black|
+|James  |eye |brown|
+|Michael|hair|brown|
+|Michael|eye |null |
+|Robert |hair|red  |
+|Robert |eye |     |
++-------+----+-----+
+   */
+  //explode_outer
+  df11.select($"name",explode_outer($"properties"))
+    .show()
+  /*
+ +----------+----+-----+
+|name      |key |value|
++----------+----+-----+
+|James     |hair|black|
+|James     |eye |brown|
+|Michael   |hair|brown|
+|Michael   |eye |null |
+|Robert    |hair|red  |
+|Robert    |eye |     |
+|Washington|null|null |
+|Jeferson  |null|null |
++----------+----+-----+
+   */
+  //posexplode
+  df11.select($"name",posexplode($"properties"))
+    .show()
+
+  //posexplode_outer
+  df11.select($"name",posexplode_outer($"properties"))
+    .show()
+
+
+  val lettersDataset = Seq((Array(("a", 1), ("b", 2), ("c", 3), ("d", 4)))).toDF("letters")
+  val mappedArraysFromEntries: DataFrame = lettersDataset.select(map_from_entries($"letters").as("mapped_arrays_from_entries"))
+
+  mappedArraysFromEntries.show(false)
+  //todo : def transform(column: Column, f: Column => Column): Column
+  val transformDF = Seq(
+    (Array("New York", "Seattle")),
+    (Array("Barcelona", "Bangalore"))
+  ).toDF("cities")
+  val transFormedFunctionExpression= (col: Column) => concat(col, lit(" is fun!"))
+  val df2 = transformDF.withColumn("fun_cities", transform(col("cities"),
+    transFormedFunctionExpression))
+  df2.show(false)
+  /*
+ +----------------------+--------------------------------------+
+|cities                |fun_cities                            |
++----------------------+--------------------------------------+
+|[New York, Seattle]   |[New York is fun!, Seattle is fun!]   |
+|[Barcelona, Bangalore]|[Barcelona is fun!, Bangalore is fun!]|
++----------------------+--------------------------------------+
+
+   */
+  /*
+ TODO
+   Returns whether a predicate holds for one or more elements in the array.
+  def exists(column: Column, f: Column => Column): Column = withExpr {
+    ArrayExists(column.expr, createLambda(f))
+  }
+  +----+------------------+------------+
+|col1|arrayColumn2      |IsEven-Array|
++----+------------------+------------+
+|x   |[1, 2, 3, 7, 7]   |true        |
+|z   |[3, 2, 8, 9, 4, 9]|true        |
+|a   |[4, 5, 2, 8]      |true        |
++----+------------------+------------+
+   */
+  val function1Expression: Column => Column = (col:Column) => col % 2 === 0
+  df.select(exists(col("arrayColumn2"), function1Expression).as("IsEven-Array"))
+  df.withColumn("IsEven-Array",exists(col("arrayColumn2"),function1Expression)).show(false)
+  /*
+ TODO
+  Returns whether a predicate holds for every element in the array.
+   df.select(forall(col("i"), x => x % 2 === 0))
+   +----+------------------+---------+
+|col1|arrayColumn2      |predicate|
++----+------------------+---------+
+|x   |[1, 2, 3, 7, 7]   |false    |
+|z   |[3, 2, 8, 9, 4, 9]|false    |
+|a   |[4, 5, 2, 8]      |false    |
++----+------------------+---------+
+   */
+  val forAllExpression: Column => Column = (col:Column) => col % 2 === 0
+  df.withColumn("predicate",forall(col("arrayColumn2"),forAllExpression)).show(false)
+
+  /*
+ TODO
+   Returns an array of elements for which a predicate holds in a given array.
+   df.select(filter(col("s"), x => x % 2 === 0))
+
+   */
+  val filterExpression: Column => Column = (col:Column) => col % 2 === 0
+  df.withColumn("filterdArray",filter(col("arrayColumn2"),filterExpression)).show(false)
+
+  /*
+TODO
+ Applies a binary operator to an initial state and all elements in the array, and reduces this to a single state.
+   df.select(aggregate(col("i"), lit(0), (acc, x) => acc + x))
+   */
+  val aggregateExpression = (acc:Column,x:Column) => acc + x
+  df.withColumn("reduced-Array-Value",aggregate(col("arrayColumn2"),lit(0),aggregateExpression)).show(false)
 }
+
+
 
