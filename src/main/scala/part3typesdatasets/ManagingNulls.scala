@@ -15,7 +15,14 @@ object ManagingNulls extends App {
     .json("src/main/resources/data/movies.json")
 
 
-  // select the first non-null value
+  // TODO : -> select the first non-null value
+  /*
+TODO
+   For every row in dataframe spark will check the
+    Rotten_Tomatoes_Rating first and if it is  null
+    then spark will pick this
+    IMDB_Rating
+   */
   moviesDF.select(
     col("Title"),
     col("Rotten_Tomatoes_Rating"),
@@ -23,16 +30,16 @@ object ManagingNulls extends App {
     coalesce(col("Rotten_Tomatoes_Rating"), col("IMDB_Rating") * 10)
   )
 
-  // checking for nulls
+  //TODO : ->  checking for nulls
   moviesDF.select("*").where(col("Rotten_Tomatoes_Rating").isNull)
 
-  // nulls when ordering
+  //TODO: -> nulls when ordering
   moviesDF.orderBy(col("IMDB_Rating").desc_nulls_last)
 
-  // removing nulls
-  moviesDF.select("Title", "IMDB_Rating").na.drop() // remove rows containing nulls
+  //TODO :-> removing nulls
+  moviesDF.select("Title", "IMDB_Rating").na.drop() // todo : remove rows containing nulls
 
-  // replace nulls
+  //todo replace nulls
   moviesDF.na.fill(0, List("IMDB_Rating", "Rotten_Tomatoes_Rating"))
   moviesDF.na.fill(Map(
     "IMDB_Rating" -> 0,

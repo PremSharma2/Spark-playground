@@ -1,6 +1,6 @@
 package part2dataframes
 
-import org.apache.spark.sql.{Column, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.sql.functions.{col, column, expr}
 
 object ColumnsAndExpressions extends App {
@@ -18,7 +18,9 @@ object ColumnsAndExpressions extends App {
   val firstColumn: Column = carsDF.col("Name")
 
   // selecting (projecting)
-  val carNamesDF = carsDF.select(firstColumn)
+  //TODO : We are projecting the existing dataframe into new data frame which has less data
+  //TODO Hence Select is also the transformation over DF
+  val carNamesDF: DataFrame = carsDF.select(firstColumn)
 
   // various select methods
   import spark.implicits._
@@ -26,12 +28,13 @@ object ColumnsAndExpressions extends App {
     carsDF.col("Name"),
     col("Acceleration"),
     column("Weight_in_lbs"),
-    'Year, // Scala Symbol, auto-converted to column
+    'Year, // Scala Symbol, auto-converted to column object
     $"Horsepower", // fancier interpolated string, returns a Column object
-    expr("Origin") // EXPRESSION
+    expr("Origin") //  TODO :EXPRESSION -> it will also transform this expression into column object
   )
 
-  // select with plain column names
+  //   TODO : -> select with plain column names
+  //TODO def select(col: String, cols: String*): DataFrame = select((col +: cols).map(Column(_)) : _*)
   carsDF.select("Name", "Year")
 
   // EXPRESSIONS
@@ -45,17 +48,18 @@ object ColumnsAndExpressions extends App {
     expr("Weight_in_lbs / 2.2").as("Weight_in_kg_2")
   )
 
-  // selectExpr
+  //TODO : alternatively we can use  selectExpr
+//TODO use this when we want to evaluate multiple Expression Like this
   val carsWithSelectExprWeightsDF = carsDF.selectExpr(
     "Name",
     "Weight_in_lbs",
     "Weight_in_lbs / 2.2"
   )
 
-  // DF processing
+  //TODO:-> DF processing
 
   // adding a column
-  val carsWithKg3DF = carsDF.withColumn("Weight_in_kg_3", col("Weight_in_lbs") / 2.2)
+  val carsWithKg3DF: DataFrame = carsDF.withColumn("Weight_in_kg_3", col("Weight_in_lbs") / 2.2)
   // renaming a column
   val carsWithColumnRenamed = carsDF.withColumnRenamed("Weight_in_lbs", "Weight in pounds")
   // careful with column names
@@ -64,13 +68,15 @@ object ColumnsAndExpressions extends App {
   carsWithColumnRenamed.drop("Cylinders", "Displacement")
 
   // filtering
-  val europeanCarsDF = carsDF.filter(col("Origin") =!= "USA")
+  val filterColumnExpression: Column = col("Origin") =!= "USA"
+  val europeanCarsDF = carsDF.filter(filterColumnExpression)
   val europeanCarsDF2 = carsDF.where(col("Origin") =!= "USA")
   // filtering with expression strings
   val americanCarsDF = carsDF.filter("Origin = 'USA'")
-  // chain filters
+  //TODO:-> chain the  filter Expressions i.e    will chain two Column object expression and return single Column object
+  val chainedFilterExpression= col("Origin") === "USA" and col("Horsepower") > 150
   val americanPowerfulCarsDF = carsDF.filter(col("Origin") === "USA").filter(col("Horsepower") > 150)
-  val americanPowerfulCarsDF2 = carsDF.filter(col("Origin") === "USA" and col("Horsepower") > 150)
+  val americanPowerfulCarsDF2 = carsDF.filter(chainedFilterExpression)
   val americanPowerfulCarsDF3 = carsDF.filter("Origin = 'USA' and Horsepower > 150")
 
   // unioning = adding more rows

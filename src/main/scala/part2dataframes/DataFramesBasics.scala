@@ -42,10 +42,10 @@ object DataFramesBasics extends App {
     StructField("Origin", StringType)
   ))
 
-  // obtain a schema
+  //TODO:-> obtain a schema
   val carsDFSchema = firstDF.schema
 
-  // read a DF with your schema
+  //TODO:-> read a DF with your schema
   val carsDFWithSchema = spark.read
     .format("json")
     .schema(carsDFSchema)
@@ -54,7 +54,7 @@ object DataFramesBasics extends App {
   // create rows by hand
   val myRow = Row("chevrolet chevelle malibu",18,8,307,130,3504,12.0,"1970-01-01","USA")
 
-  // create DF from tuples
+  //TODO:-> create DF from tuples
   val cars = Seq(
     ("chevrolet chevelle malibu",18,8,307,130,3504,12.0,"1970-01-01","USA"),
     ("buick skylark 320",15,8,350,165,3693,11.5,"1970-01-01","USA"),

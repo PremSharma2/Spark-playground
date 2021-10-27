@@ -1,6 +1,6 @@
 package part6practical
 
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
 
@@ -27,7 +27,7 @@ object TestDeployApp {
       .option("inferSchema", "true")
       .json(args(0))
 
-    val goodComediesDF = moviesDF.select(
+    val goodComediesDF: Dataset[Row] = moviesDF.select(
       col("Title"),
       col("IMDB_Rating").as("Rating"),
       col("Release_Date").as("Release")

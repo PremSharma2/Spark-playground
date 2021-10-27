@@ -10,29 +10,32 @@ object SparkSql extends App {
     .config("spark.master", "local")
     .config("spark.sql.warehouse.dir", "src/main/resources/warehouse")
     // only for Spark 2.4 users:
-    // .config("spark.sql.legacy.allowCreatingManagedTableUsingNonemptyLocation", "true")
+     //.config("spark.sql.legacy.allowCreatingManagedTableUsingNonemptyLocation", "true")
     .getOrCreate()
 
   val carsDF = spark.read
     .option("inferSchema", "true")
     .json("src/main/resources/data/cars.json")
-
-  // regular DF API
+ carsDF.show(false)
+  // TODO : ->regular DF API
   carsDF.select(col("Name")).where(col("Origin") === "USA")
 
-  // use Spark SQL
+  //TODO :-> use Spark SQL
+  //TODO createOrReplaceTempView will create alias for carsDF so that we can use this alias
+  //TODO as TableName
   carsDF.createOrReplaceTempView("cars")
   val americanCarsDF = spark.sql(
     """
       |select Name from cars where Origin = 'USA'
     """.stripMargin)
-
-  // we can run ANY SQL statement
+americanCarsDF.show(false)
+  //TODO:-> we can run ANY SQL statement
   spark.sql("create database rtjvm")
   spark.sql("use rtjvm")
   val databasesDF = spark.sql("show databases")
+   databasesDF.show(false)
 
-  // transfer tables from a DB to Spark tables
+  // TODO : -> transfer tables from a DB to Spark tables
   val driver = "org.postgresql.Driver"
   val url = "jdbc:postgresql://localhost:5432/rtjvm"
   val user = "docker"
@@ -47,18 +50,19 @@ object SparkSql extends App {
     .option("dbtable", s"public.$tableName")
     .load()
 
-  def transferTables(tableNames: List[String], shouldWriteToWarehouse: Boolean = false) = tableNames.foreach { tableName =>
+  def transferTables(tableNames: List[String], shouldWriteToWarehouse: Boolean = false) =
+    tableNames.foreach { tableName =>
     val tableDF = readTable(tableName)
     tableDF.createOrReplaceTempView(tableName)
 
     if (shouldWriteToWarehouse) {
       tableDF.write
-        .mode(SaveMode.Overwrite)
+        .mode(SaveMode.Overwrite)//todo writing a batch snapshot in overwrite mode
         .saveAsTable(tableName)
     }
   }
 
-  transferTables(List(
+ val x: Unit = transferTables(List(
     "employees",
     "departments",
     "titles",
@@ -67,8 +71,9 @@ object SparkSql extends App {
     "dept_manager")
   )
 
-  // read DF from loaded Spark tables
+  // todo read table alias DF from Spark managed hive-Warehouse
   val employeesDF2 = spark.read.table("employees")
+  employeesDF2.show(false)
 
   /**
     * Exercises
@@ -123,4 +128,8 @@ object SparkSql extends App {
       |limit 1
     """.stripMargin
   ).show()
+
+
+
+
 }

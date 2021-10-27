@@ -1,6 +1,6 @@
 package part2dataframes
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 
 object Aggregations extends App {
@@ -26,14 +26,15 @@ object Aggregations extends App {
   moviesDF.select(countDistinct(col("Major_Genre"))).show()
 
   // approximate count
+  // TODO :approximate count helpful in data analytics
   moviesDF.select(approx_count_distinct(col("Major_Genre")))
 
   // min and max
-  val minRatingDF = moviesDF.select(min(col("IMDB_Rating")))
+  val minRatingDF: DataFrame = moviesDF.select(min(col("IMDB_Rating")))
   moviesDF.selectExpr("min(IMDB_Rating)")
 
   // sum
-  moviesDF.select(sum(col("US_Gross")))
+  moviesDF.select(sum(col("US_Gross")).as("Total-Gross"))
   moviesDF.selectExpr("sum(US_Gross)")
 
   // avg

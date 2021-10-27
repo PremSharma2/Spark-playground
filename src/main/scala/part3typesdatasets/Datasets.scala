@@ -47,6 +47,14 @@ object Datasets extends App {
   val carsDF = readDF("cars.json")
 
   // 3 - define an encoder (importing the implicits)
+  /*
+ TODO
+  def product[T <: Product : TypeTag]: Encoder[T] = ExpressionEncoder()
+  Actually product takes type argument which is sub type of Product class
+  So by default all case classes are sub type of Product Actually
+   */
+
+  implicit val carEncoder= Encoders.product[Car]
   import spark.implicits._
   // 4 - convert the DF to DS
   val carsDS = carsDF.as[Car]
@@ -75,8 +83,9 @@ object Datasets extends App {
   // 3
   println(carsDS.map(_.Horsepower.getOrElse(0L)).reduce(_ + _) / carsCount)
 
-  // also use the DF functions!
-  carsDS.select(avg(col("Horsepower")))
+  // TODO also use the DF functions! because DF is actually  Dataset  of Dataset[Row]
+  //Todo where as DS is typed with jvm objects
+  carsDS.select(avg(col("Horsepower")).as("avg-horse-power"))
 
 
   // Joins
@@ -88,7 +97,8 @@ object Datasets extends App {
   val guitarPlayersDS = readDF("guitarPlayers.json").as[GuitarPlayer]
   val bandsDS = readDF("bands.json").as[Band]
 
-  val guitarPlayerBandsDS: Dataset[(GuitarPlayer, Band)] = guitarPlayersDS.joinWith(bandsDS, guitarPlayersDS.col("band") === bandsDS.col("id"), "inner")
+  val guitarPlayerBandsDS: Dataset[(GuitarPlayer, Band)] =
+    guitarPlayersDS.joinWith(bandsDS, guitarPlayersDS.col("band") === bandsDS.col("id"), "inner")
 
   /**
     * Exercise: join the guitarsDS and guitarPlayersDS, in an outer join
