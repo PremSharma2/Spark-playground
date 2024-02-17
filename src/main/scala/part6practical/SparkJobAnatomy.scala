@@ -32,7 +32,7 @@ object SparkJobAnatomy extends App {
   rdd1.count
   // inspect the UI, one stage with 6 tasks; DAG in a single step
   // task = a unit of computation applied to a unit of data (a partition)
-
+val rdd2=  rdd1.map(_ * 2)
   rdd1.map(_ * 2).count
   // inspect the UI, another job with one stage, 6 tasks but one more step in the DAG - that's for the map
 

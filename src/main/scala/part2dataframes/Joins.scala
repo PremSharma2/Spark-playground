@@ -23,25 +23,26 @@ object Joins extends App {
     .json("src/main/resources/data/bands.json")
 
   // inner joins
-  val joinConditionExpression: Column = guitaristsDF.col("band") === bandsDF.col("id")
-  val guitaristsBandsDF = guitaristsDF.join(bandsDF, joinConditionExpression, "inner")
+  val joinExpression: Column = guitaristsDF.col("band") === bandsDF.col("id")
+  val guitaristsBandsDF = guitaristsDF.join(bandsDF, joinExpression, "inner")
 
   // outer joins
   //todo: -> left outer = everything in the inner join + all the rows in the LEFT table, with nulls in where the data is missing
-  guitaristsDF.join(bandsDF, joinConditionExpression, "left_outer")
+  guitaristsDF.join(bandsDF, joinExpression, "left_outer")
 
   // TOdo : ->right outer = everything in the inner join + all the rows in the RIGHT table, with nulls in where the data is missing
-  guitaristsDF.join(bandsDF, joinConditionExpression, "right_outer")
+  guitaristsDF.join(bandsDF, joinExpression, "right_outer")
 
   // todo : -> outer join = everything in the inner join + all the rows in BOTH tables, with nulls in where the data is missing
-  guitaristsDF.join(bandsDF, joinConditionExpression, "outer")
+  //actually outer join is combination of these joins innerJoin+left_outer+right_outer
+  guitaristsDF.join(bandsDF, joinExpression, "outer")
 
   //todo: -> semi-joins = everything in the left DF for which there is a row in the right DF satisfying the condition
-  guitaristsDF.join(bandsDF, joinConditionExpression, "left_semi")
+  guitaristsDF.join(bandsDF, joinExpression, "left_semi")
 
   //todo:-> anti-joins = everything in the left DF for which there is NO row in the right DF satisfying the condition
   //TODO : actually this gives missing Rows in Left DataFrame
-  guitaristsDF.join(bandsDF, joinConditionExpression, "left_anti")
+  guitaristsDF.join(bandsDF, joinExpression, "left_anti")
 
 
   // things to bear in mind
@@ -91,8 +92,10 @@ object Joins extends App {
 
   //TODO :-> Exercise: 1  show all employees and their max salary
   val maxSalariesPerEmpNoDF: DataFrame = salariesDF.groupBy("emp_no").agg(max("salary").as("maxSalary"))
-  //TODO joining the maxSalariesPerEmpNoDF with employeesDF
+
+  //TODO joining the maxSalariesPerEmpNoDF with employeesDF to get the Employee Details as well
   val employeesSalariesDF = employeesDF.join(maxSalariesPerEmpNoDF, "emp_no")
+
 
   // TODO :Exercise:2
   //TODO  show all employees who were never managers
@@ -101,6 +104,8 @@ object Joins extends App {
     employeesDF.col("emp_no") === deptManagersDF.col("emp_no"),
     "left_anti"
   )
+
+  empNeverManagersDF.show(10,false)
 
   // TODO Exercise :->3 find the job titles of the best paid 10 employees in the company
   //todo making sure we are getting the latest toDate from title DF
@@ -137,8 +142,9 @@ only showing top 20 rows
     .agg(max("to_date").as("latest-Date"))
 
   val bestPaidEmployeesDF = employeesSalariesDF.orderBy(col("maxSalary").desc).limit(10)
-  val bestPaidJobsDF = bestPaidEmployeesDF.join(mostRecentJobTitlesDF, "emp_no")
 
+  val bestPaidJobsDF = bestPaidEmployeesDF.join(mostRecentJobTitlesDF, "emp_no")
+  mostRecentJobTitlesDF.show(20,false)
   bestPaidJobsDF.show()
 }
 

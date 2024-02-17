@@ -1,6 +1,6 @@
 package part6practical
 
-import org.apache.spark.sql.{Dataset, Row, SaveMode, SparkSession}
+import org.apache.spark.sql.{Column, Dataset, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
 
@@ -27,12 +27,13 @@ object TestDeployApp {
       .option("inferSchema", "true")
       .json(args(0))
 
+    val andExpression: Column =col("Major_Genre") === "Comedy" and col("IMDB_Rating") > 6.5
     val goodComediesDF: Dataset[Row] = moviesDF.select(
       col("Title"),
       col("IMDB_Rating").as("Rating"),
       col("Release_Date").as("Release")
     )
-      .where(col("Major_Genre") === "Comedy" and col("IMDB_Rating") > 6.5)
+      .where(andExpression)
       .orderBy(col("Rating").desc_nulls_last)
 
     goodComediesDF.show
@@ -67,9 +68,9 @@ object TestDeployApp {
     *   docker exec -it spark-cluster_spark-master_1 bash
     *
     * 3. Run the spark-submit command
-    *   /spark/bin/spark-submit \
+    *   ./bin/spark-submit \
     *     --class part6practical.TestDeployApp \
-    *     --master spark://(dockerID):7077 \
+    *     --master spark://24101767ff7d:7077 \
     *     --deploy-mode client \
     *     --verbose \
     *     --supervise \

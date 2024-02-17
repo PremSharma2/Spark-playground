@@ -1,7 +1,8 @@
 package part3typesdatasets
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Column, SparkSession}
 import org.apache.spark.sql.functions._
+import part3typesdatasets.ManagingNulls.colasceExpression
 
 object ManagingNulls extends App {
 
@@ -16,22 +17,25 @@ object ManagingNulls extends App {
 
 
   // TODO : -> select the first non-null value
-  /*
-TODO
-   For every row in dataframe spark will check the
+  /**
+   TODO
+    For every row in dataframe spark will check the
     Rotten_Tomatoes_Rating first and if it is  null
     then spark will pick this
     IMDB_Rating
    */
+  val colasceExpression=coalesce(col("Rotten_Tomatoes_Rating"), col("IMDB_Rating") * 10)
   moviesDF.select(
     col("Title"),
     col("Rotten_Tomatoes_Rating"),
     col("IMDB_Rating"),
-    coalesce(col("Rotten_Tomatoes_Rating"), col("IMDB_Rating") * 10)
+    colasceExpression.as("Coalesce")
   )
 
   //TODO : ->  checking for nulls
-  moviesDF.select("*").where(col("Rotten_Tomatoes_Rating").isNull)
+  val filterNullExpression: Column =col("Rotten_Tomatoes_Rating").isNull
+
+  moviesDF.select("*").where(filterNullExpression)
 
   //TODO: -> nulls when ordering
   moviesDF.orderBy(col("IMDB_Rating").desc_nulls_last)

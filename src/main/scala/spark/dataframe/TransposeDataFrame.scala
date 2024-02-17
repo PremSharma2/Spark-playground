@@ -2,6 +2,7 @@ package spark.dataframe
 
 
 import org.apache.spark.SparkConf
+import org.apache.spark.sql.functions.coalesce
 import org.apache.spark.sql.{Column, SparkSession}
 object TransposeDataFrame  extends App {
   import org.apache.spark.sql.functions.{col, lit, when}
@@ -29,7 +30,12 @@ object TransposeDataFrame  extends App {
   val pivot_df = df.groupBy("name").
                     pivot("subject").
                    max("marks")
+
   pivot_df.show(false)
+
+
+
+
 /*
 ----+-----+-------+
 |name|maths|physics|
@@ -50,6 +56,16 @@ df.select("start").map(el->el.getString(0)+"asd")
 
 But you will get an DataSet[String] as return value not a DF
    */
+
+  val expression=coalesce($"maths", lit(0)) + coalesce($"physics", lit(0))
+
+  pivot_df.withColumn ("totalMarks", expression)
+
+  pivot_df.select(
+    col("name"),
+    expression.as("totalMarks")
+
+  )
   val cols: Seq[String] = df.select("subject").
     distinct.
     map(r => r.getString(0)).collect()

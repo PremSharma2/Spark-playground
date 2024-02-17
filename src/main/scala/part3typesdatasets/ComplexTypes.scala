@@ -17,13 +17,16 @@ object ComplexTypes extends App {
 
   //TODO Paying with Dates In spark
 val dateExpression: Column =  to_date(col("Release_Date"), "dd-MMM-yy")
+
   val moviesWithReleaseDates = moviesDF
     .select(col("Title"), dateExpression.as("Actual_Release")) // conversion
+
+  val dateDiffexpresion=datediff(col("Today"), col("Actual_Release")) / 365
 
   moviesWithReleaseDates
     .withColumn("Today", current_date()) // today
     .withColumn("Right_Now", current_timestamp()) // this second
-    .withColumn("Movie_Age", datediff(col("Today"), col("Actual_Release")) / 365) // date_add, date_sub
+    .withColumn("Movie_Age", dateDiffexpresion) // date_add, date_sub
 
 val filterExpression: Column = col("Actual_Release").isNull
   moviesWithReleaseDates.select("*").where(filterExpression)
@@ -45,11 +48,13 @@ val filterExpression: Column = col("Actual_Release").isNull
   val stocksDFWithDates = stocksDF
     .withColumn("actual_date", to_date(col("date"), "MMM dd yyyy"))
 
+
   // TODO Structures
 
   // TODO 1 - with col operators combining two columns into single column
+  val structExpression=struct(col("US_Gross"), col("Worldwide_Gross"))
   moviesDF
-    .select(col("Title"), struct(col("US_Gross"), col("Worldwide_Gross")).as("Profit"))
+    .select(col("Title"), structExpression.as("Profit"))
     .select(col("Title"), col("Profit").getField("US_Gross").as("US_Profit"))
 
   //TODO 2 - with expression strings
@@ -87,6 +92,9 @@ TODO
     however many months from the start date.
     In the below statement we add 1 month to the column “date”
     and generated a new column as “next_month”.
+    Suppose you have a row in empdf with the date "2019-02-01 15:12:13".
+    When add_months(col("Date"), 1) is applied to this row,
+    it adds 1 month to this date, resulting in "2019-03-01 15:12:13
    */
   val df = empdf
     .select("Date")
@@ -143,6 +151,10 @@ TODO
  we can use “yyyy” or “yy” or” “year” to specify year.
  For timestamp “2019–02–01 15:12:13”,
   if we truncate based on the year it will return “2019–01–01 00:00:00”
+  Date: "2019-02-01 15:12:13"
+   new_date: "2019-01-01 00:00:00"
+   The new_date column shows the first moment of the year 2019,
+   as the time has been truncated to the start of the year.
    */
 
   val df6 = empdf
@@ -156,8 +168,10 @@ TODO
    Let’s truncate date by month.
    We use “mm” or “month” or” “mon” to specify month.
    For timestamp “2019–02–01 15:12:13”,
+   it will reset the date to the first day of the month at midnight (00:00:00),
    if we truncate based on month it returns “2019–02–01 00:00:00”
    */
+
  val df7 = empdf
     .select("Date")
     .withColumn("new_date", date_trunc("month", col("Date")))
@@ -169,7 +183,10 @@ todo
   We can use “day” or “dd” to specify day.
   For timestamp “2019–02–10 15:12:13”,
   if we truncate based on day it will return “2019–02–10 00:00:00”
+  will reset the time part of the timestamp to midnight (00:00:00) on the same day.
+
    */
+
   val df8 = empdf
     .select("Date")
     .withColumn("new_date", date_trunc("day", col("Date")))
@@ -178,6 +195,8 @@ todo
  TODO
   This function returns the day of the month. For 5th Jan 2019 (2019–01–05) it will return 5.
    */
+
+
  val df9 = empdf
     .select("Date")
     .withColumn("dayofmonth", dayofmonth(col("Date")))

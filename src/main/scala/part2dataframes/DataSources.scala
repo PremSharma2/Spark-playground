@@ -4,11 +4,25 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 import org.apache.spark.sql.types._
 
 object DataSources extends App {
+  import org.apache.spark.{SparkConf, SparkContext}
+
+
+
+
+  // Now you can work with Hadoop filesystem, etc.
 
   val spark = SparkSession.builder()
     .appName("Data Sources and Formats")
     .config("spark.master", "local")
     .getOrCreate()
+
+val sc= spark.sparkContext
+  // Access Hadoop configuration from Spark context
+  val hadoopConf = sc.hadoopConfiguration
+
+  // Set Hadoop-related properties, e.g., pointing to your `winutils.exe`
+  hadoopConf.set("hadoop.home.dir", "C:\\tools\\hadoop")
+  hadoopConf.set("hadoop.bin.path", "C:\\tools\\hadoop\\bin")
 
   //TODO : Cars Schema
   val carsSchema = StructType(Array(
@@ -34,15 +48,16 @@ object DataSources extends App {
    */
   val carsDF = spark.read
     .format("json")
-    .schema(carsSchema) // enforce a schema
-    .option("mode", "failFast") // dropMalformed, permissive (default)
+    .schema(carsSchema) // enforce a schema while reading the DF
+    .option("mode", "failFast") // dropMalformed, permissive (default mode )
     .option("path", "src/main/resources/data/cars.json")
     .load()
 
   // alternative reading with options map
   val carsDFWithOptionMap = spark.read
     .format("json")
-    .options(Map(
+    .options(
+      Map(
       "mode" -> "failFast",
       "path" -> "src/main/resources/data/cars.json",
       "inferSchema" -> "true"
@@ -57,19 +72,22 @@ object DataSources extends App {
    - path
    - zero or more options
   */
-  carsDF
+     carsDF
     .write
     .format("json")
     .mode(SaveMode.Overwrite) // overwrite the earlier snapshot with this new one
     .save("src/main/resources/data/cars_dupe.json")
 
+
   // JSON flags
-  spark.read
+    spark
+      .read
     .schema(carsSchema)
     .option("dateFormat", "YYYY-MM-dd") // couple with schema; if Spark fails parsing, it will put null
     .option("allowSingleQuotes", "true")
     .option("compression", "uncompressed") // bzip2, gzip, lz4, snappy, deflate
     .json("src/main/resources/data/cars.json")
+
 
   // CSV flags
   val stocksSchema = StructType(Array(
@@ -86,7 +104,7 @@ object DataSources extends App {
     .option("nullValue", "")
     .csv("src/main/resources/data/stocks.csv")
 
-  // Parquet
+  // Parquet default format for DFs
   carsDF.write
     .mode(SaveMode.Overwrite)
     .save("src/main/resources/data/cars.parquet")
