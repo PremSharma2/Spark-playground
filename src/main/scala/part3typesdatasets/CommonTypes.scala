@@ -23,19 +23,19 @@ object CommonTypes extends App {
   //TODO : -> Booleans type
   //TODO : here we have chained the the filter expression
   // and that in turn will return Column which is also expression
-  val dramaFilter: Column = col("Major_Genre") equalTo "Drama"
-  val goodRatingFilter: Column = col("IMDB_Rating") > 7.0
-  val preferredFilter: Column = dramaFilter and goodRatingFilter
+  val dramaFilterExpression: Column = col("Major_Genre") equalTo "Drama"
+  val ratingFilterExpression: Column = col("IMDB_Rating") > 7.0
+  val chainedFilterExpression: Column = dramaFilterExpression and ratingFilterExpression
 
 // TODO : where takes argument of type Expression or Column which is also an Expression
-  moviesDF.select("Title").where(dramaFilter)
+  moviesDF.select("Title").where(dramaFilterExpression)
   // + multiple ways of filtering
 
   // todo : adding one more column based on Expression
   //  In short we are trying to evaluate the filter Expression as value
   //this means that this Expression is
   // attached to this Column preferredFilter.as("good_movie") named good_movie
-  val moviesWithGoodnessFlagsDF = moviesDF.select(col("Title"), preferredFilter.as("good_movie"))
+  val moviesWithGoodnessFlagsDF = moviesDF.select(col("Title"), chainedFilterExpression.as("good_movie"))
 
   // TODO : filter on a boolean column
   //TODO here good_movie is Column or Expression which evaluates to Boolean

@@ -107,20 +107,25 @@ This approach is beneficial when analyzing trends or extracting insights from da
 
 
   /**
-    * Exercises
-    *
-    * 1. Sum up ALL the profits of ALL the movies in the DF
-    * 2. Count how many distinct directors we have across all movies
-    * 3. Show the mean and standard deviation of US gross revenue for the movies
-    * 4. Compute the average IMDB rating and the average US gross revenue PER DIRECTOR
-    */
+   * Exercises
+   *
+   * 1. Sum up ALL the profits of ALL the movies in the DF
+   * 2. Count how many distinct directors we have
+   * 3. Show the mean and standard deviation of US gross revenue for the movies
+   * 4. Compute the average IMDB rating and the average US gross revenue PER DIRECTOR
+   * 5. For each Major Genre and Director, determine whether the director has made any movie
+   *    that received a Rotten Tomatoes Rating ≥ 80. If yes, assign "Hit", else assign "Average".
+   *    //hint: Conditional aggregation: Prioritize "Hit" if rating ≥ 80, else "Average"
+   * 6. For each Major Genre, collect all distinct MPAA ratings used across its movies,
+   *    and concatenate them as a comma-separated string (like a summary of allowed audience types per genre).
+   * 7. Find highest-grossing movie in US per genre(groupBy genre) — but only for movies with IMDB rating ≥ 7.0
+   */
 
 
   // 1
-  val mathematicalExpression: Column =(col("US_Gross") + col("Worldwide_Gross") + col("US_DVD_Sales")).as("Total_Gross")
   moviesDF
-    .select(mathematicalExpression)
-    .select(sum("Total_Gross").as("Total-Gross"))
+    .select((col("US_Gross") + col("Worldwide_Gross") + col("US_DVD_Sales")).as("Total_Gross"))
+    .select(sum("Total_Gross"))
     .show()
 
   // 2
@@ -143,5 +148,33 @@ This approach is beneficial when analyzing trends or extracting insights from da
     )
     .orderBy(col("Avg_Rating").desc_nulls_last)
     .show()
+
+  import org.apache.spark.sql.functions._
+
+  // Conditional aggregation: Prioritize "Hit" if rating ≥ 80, else "Average"
+  val genreDirectorRatingPriorityDf = moviesDF
+    .groupBy(col("Major_Genre"), col("Director"))
+    .agg(
+      max(when(col("Rotten_Tomatoes_Rating") >= 80, "Hit").otherwise("Average")).alias("Performance")
+    )
+
+
+
+  import org.apache.spark.sql.functions._
+
+  val genreMpaaConcatDf = moviesDF
+    .groupBy(col("Major_Genre"))
+    .agg(
+      concat_ws(",", collect_set(col("MPAA_Rating"))).alias("All_MPAARatings")
+    )
+
+  import org.apache.spark.sql.functions._
+
+  val highestGrossingHighRated = moviesDF
+    .groupBy(col("Major_Genre"))
+    .agg(
+      max(when(col("IMDB_Rating") >= 7.0, col("US_Gross")).alias("Top_US_Gross_HighRated"))
+    )
+
 
 }

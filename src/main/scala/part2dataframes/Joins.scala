@@ -99,13 +99,13 @@ object Joins extends App {
 
   // TODO :Exercise:2
   //TODO  show all employees who were never managers
-  val empNeverManagersDF = employeesDF.join(
+  private val empNeverManagersDF = employeesDF.join(
     deptManagersDF,
     employeesDF.col("emp_no") === deptManagersDF.col("emp_no"),
     "left_anti"
   )
 
-  empNeverManagersDF.show(10,false)
+  empNeverManagersDF.show(10,truncate = false)
 
   // TODO Exercise :->3 find the job titles of the best paid 10 employees in the company
   //todo making sure we are getting the latest toDate from title DF

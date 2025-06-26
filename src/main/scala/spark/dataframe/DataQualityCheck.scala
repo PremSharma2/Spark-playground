@@ -46,7 +46,7 @@ object DataQualityCheck extends App {
   //columns.map(f: String => Column)
   //val countExpression = count(when(col(column).isNull,column))
   val columnstoBeSelected: Array[Column] =columns.map(
-    column=> count(when(col(column).isNull,column)).as(column))
+    column => count(when(col(column).isNull,column)).as(column))
 
 
   df2.select(columnstoBeSelected:_*).show(false)
